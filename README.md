@@ -43,7 +43,7 @@ if [ ! -f $idxstats ]; then
 fi
 
 ## Calculate the total background
-bgCov=$(cat $idxstats | head -22 | awk -v frag=$fragmentSize '{print $3/$2*frag}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
+bgCov=$(grep -E '^chr(1?[0-9]|2[0-2])\s' $idxstats| awk -v frag=$fragmentSize '{print $3/$2*frag}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
 echo $bgCov
 ```
 
