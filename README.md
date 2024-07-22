@@ -16,7 +16,7 @@ BED files are provided in this repository (link [here](https://github.com/jjuhyu
 Aligned BAM files should be based on the Broad GRCh38 reference. You can download the reference from [Broad Github](https://github.com/broadinstitute/gatk/raw/master/src/test/resources/large/Homo_sapiens_assembly38.fasta.gz).
 ```
 # This is an example
-sample=GM04890
+sample=Sample01
 threads=10
 covLen=136405
 
