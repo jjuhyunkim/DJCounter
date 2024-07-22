@@ -67,13 +67,14 @@ echo -e "$prefix\t$djCount" > $outdir/$prefix.dj_hg38.txt
 ```
 
 ###  Expectable output
+The output file `$outdir/$prefix.dj_hg38.txt` contains two columns separated by tabs:
+1. **$prefix:** This column contains identifiers or names associated with each estimation of DJ count.
+2. **Estimation of DJ count based on diploid genome:** This column provides the calculated DJ count values adjusted for diploid genome context.
+```
+Sample01	8.30800
+```
+
 Normal human samples typically yield around 10 copies of DJ counts.
 Robertsonian samples usually show approximately ~8 copies, with occasional deviations to ~11 or ~9.
 
 <img src="https://github.com/user-attachments/assets/9212dabb-593f-4040-bebc-494a74301fa0" width="200">
-
-### Logs
-
-
-
-
