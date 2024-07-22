@@ -74,7 +74,7 @@ The output file `$outdir/$prefix.dj_hg38.txt` contains two columns separated by 
 Sample01	8.30800
 ```
 
-Normal human samples typically yield around 10 copies of DJ counts.
-Robertsonian samples usually show approximately ~8 copies, with occasional deviations to ~11 or ~9.
+Normal human samples typically yield around 10 copies of DJ counts, with occasional deviations to ~11 or ~9.
+Robertsonian samples usually show approximately ~8 copies.
 
 <img src="https://github.com/user-attachments/assets/9212dabb-593f-4040-bebc-494a74301fa0" width="200">
