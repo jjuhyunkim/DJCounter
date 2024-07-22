@@ -49,7 +49,7 @@ echo $bgCov
 
 ### Calculating the coverage of DJ regions scattered across GRCh38 reference
 The provided BED file contains regions highly similar to DJ regions on CHM13 chromosome 13, excluding high variable or repeat regions.
-Coverage calculation utilizes samtools depth, with computational time typically under 5 minutes using 10 threads, depending on BAM file size.
+Coverage calculation utilizes `samtools depth`, with computational time typically under 5~8 minutes using 10 threads, depending on BAM file size.
 ```
 # Calculate the DJ regions' coverage
 samtools depth -@ $threads -b $bed $bam > $outdir/$prefix.dj_coverage_results.depth
