@@ -18,7 +18,6 @@ Aligned BAM files should be based on the Broad GRCh38 reference. You can downloa
 # This is an example
 sample=Sample01
 threads=10
-covLen=136405
 
 bam="/data/01.broad_hg38/$sample/$sample.dedup.bam" # BAM or CRAM file
 outdir="/data/01.broad_hg38/$sample" # The output directory
@@ -62,6 +61,7 @@ DJ counts are derived by dividing the total depth on DJ regions in GRCh38 by the
 The total length of DJ regions used in this analysis is fixed at 136,405 bp.
 Results are presented in diploid genome bases by multiplying by 2.
 ```bash
+covLen=136405
 djCount=$(echo "scale=5; 2 * $sum / $covLen / $bgCov" | bc)
 echo -e "$prefix\t$djCount" > $outdir/$prefix.dj_hg38.txt
 ```
