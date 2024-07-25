@@ -36,7 +36,7 @@ fragmentSize=$(samtools view $bam | head -10000 | awk '{print length($10)}' | so
 echo $fragmentSize
 
 ## Calculate the total background
-bgCov=$(samtools coverage $bam | grep -E '^chr(1?[0-9]|2[0-2])\s' | awk '{print $7}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
+bgCov=$(cat <(for i in {1..22}; do samtools coverage -r chr${i} $bam | sed -n 2p; done ) | awk -v frag=$fragmentSize '{print $4/$3*frag}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}')
 echo $bgCov
 ```
 
