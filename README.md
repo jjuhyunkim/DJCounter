@@ -23,7 +23,6 @@ bam="/data/01.broad_hg38/$sample/$sample.dedup.bam" # BAM or CRAM file
 outdir="/data/01.broad_hg38/$sample" # The output directory
 prefix="$sample" # Prefix for output files
 bed="/data/01.broad_hg38/uk.dj.bed" # BED file for DJ counting
-idxstats="$outdir/$prefix.idxstat" # If you already have one, specify its name here. If not, you can create it.
 ```
 
 ### Calculating the bacgkround coverage 
@@ -35,14 +34,9 @@ Background coverage is computed as the median depth across autosomal chromosomes
 ## Calculate the read length
 fragmentSize=$(samtools view $bam | head -10000 | awk '{print length($10)}' | sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
 echo $fragmentSize
-# Check the idxstats 
-# fragmentSize=$(samtools view $bam | head -10000 | awk '{print length($10)}' | datamash median 1)
-if [ ! -f $idxstats ]; then
-	samtools idxstats -@ $threads $bam > $idxstats
-fi
 
 ## Calculate the total background
-bgCov=$(grep -E '^chr(1?[0-9]|2[0-2])\s' $idxstats| awk -v frag=$fragmentSize '{print $3/$2*frag}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
+bgCov=$(samtools coverage $bam | grep -E '^chr(1?[0-9]|2[0-2])\s' | awk '{print $7}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
 echo $bgCov
 ```
 
@@ -51,8 +45,7 @@ The provided BED file contains regions highly similar to DJ regions on CHM13 chr
 Coverage calculation utilizes `samtools depth`, with computational time typically under 5~8 minutes using 10 threads, depending on BAM file size.
 ```bash
 # Calculate the DJ regions' coverage
-samtools depth -@ $threads -b $bed $bam > $outdir/$prefix.dj_coverage_results.depth
-sum=$(awk 'BEGIN { SUM=0 } { SUM+=$3 } END { print SUM }' "$outdir/$prefix.dj_coverage_results.depth")
+sum=$(samtools depth -@ $threads -b $bed $bam | awk 'BEGIN { SUM=0 } { SUM+=$3 } END { print SUM }')
 echo $sum
 ```
 
@@ -78,3 +71,12 @@ Normal human samples typically yield around 10 copies of DJ counts, with occasio
 Robertsonian samples usually show approximately ~8 copies.
 
 <img src="https://github.com/user-attachments/assets/9212dabb-593f-4040-bebc-494a74301fa0" width="200">
+
+
+## Changing logs
+V0.1(2024-07-17)
+* first commit
+
+V0.2(2024-07-25)
+* Changing the background coverage estimation methods from samtools idxstats to samtools coverage.
+* Removing the step of saving temporary files; instead, we assign everything to variables.
