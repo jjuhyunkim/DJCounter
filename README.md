@@ -36,7 +36,9 @@ fragmentSize=$(samtools view $bam | head -10000 | awk '{print length($10)}' | so
 echo $fragmentSize
 
 ## Calculate the total background
-bgCov=$(cat <(for i in {1..22}; do samtools coverage -r chr${i} $bam | sed -n 2p; done ) | awk -v frag=$fragmentSize '{print $4/$3*frag}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}')
+bgCov=$(for i in {1..22}; do
+  samtools coverage -r chr${i} "$bam" | sed -n 2p | awk -v frag="$fragmentSize" '{print $4/$3*frag}'
+done | sort -n | awk '{a[NR]=$1} END {print a[int(NR/2)]};')
 echo $bgCov
 ```
 
@@ -56,7 +58,7 @@ Results are presented in diploid genome bases by multiplying by 2.
 ```bash
 covLen=136405
 djCount=$(echo "scale=5; 2 * $sum / $covLen / $bgCov" | bc)
-echo -e "$prefix\t$djCount" > $outdir/$prefix.dj_hg38.txt
+echo -e "$prefix\t$fragmentSize\t$bgCov\t$sum\t$djCount" > $outdir/$prefix.dj_hg38.txt
 ```
 
 ###  Expectable output
@@ -74,9 +76,22 @@ Robertsonian samples usually show approximately ~8 copies.
 
 
 ## Changing logs
-V0.1(2024-07-17)
+<details>
+<summary>V0.1(2024-07-17)</summary>
 * first commit
+</details>
 
-V0.2(2024-07-25)
-* Changing the background coverage estimation methods from samtools idxstats to samtools coverage.
-* Removing the step of saving temporary files; instead, we assign everything to variables.
+<details>
+<summary>V0.2(2024-07-25)</summary>
+* Changing the background coverage estimation methods from samtools idxstats to samtools coverage.<br />
+* Removing the step of saving temporary files; instead, we assign everything to variables.   
+</details>
+
+<details>
+<summary>V0.2.1(2024-07-29)</summary>
+* Add background and fragment size to the output file. <br />
+* Fix the command line used for calculating the background to ensure it works correctly.
+</details>
+
+
+
