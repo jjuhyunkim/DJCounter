@@ -93,5 +93,11 @@ Robertsonian samples usually show approximately ~8 copies.
 * Fix the command line used for calculating the background to ensure it works correctly.
 </details>
 
+<details>
+<summary>V0.2.2(2025-11-26)</summary>
+* Add BED file for roi on hg19 <br />
+</details>
+
+
 
 
