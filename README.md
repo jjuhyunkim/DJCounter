@@ -1,100 +1,62 @@
 # DJ Counter
 
+Count the number of distal junctions (DJ) of the ribosomal DNA (rDNA)
+
 ## Purpose
-This repository provides tools for calculating the number of DJ counts in the genome aligned to the GRCh38 (broad reference).
+This repository provides tools for estimating the copy number of the DJs in a genome from sequencing reads.
 
 ## Principle
-The DJ counts are determined by assessing the coverage of specific regions across the GRCh38 reference genome.
+Copy number of DJs are determined by 1) the sequencing coverage in mapped reads or 2) k-mer multiplicity in raw reads.
 
 ## Main workflow
-1. Calculating the background coverage
-2. Calculating the coverage of DJ regions scattered across GRCh38 reference
-3. Calculating the number of DJ counts
+Copy number of the DJ can be estimated with the following approaches:
+1. [Mapping based approach](/scripts/mapping_based.md)
+2. [K-mer based, reference-free approach](/scripts/kmer_based.md)
 
-### Input files and settings
-BED files are provided in this repository (link [here](https://github.com/jjuhyunkim/DJCounter/raw/main/ukb-dj.bed)).
-Aligned BAM files should be based on the Broad GRCh38 reference. You can download the reference from [Broad Github](https://github.com/broadinstitute/gatk/raw/master/src/test/resources/large/Homo_sapiens_assembly38.fasta.gz).
-```bash
-# This is an example
-sample=Sample01
-threads=10
+### Mapping based estimates
 
-bam="/data/01.broad_hg38/$sample/$sample.dedup.bam" # BAM or CRAM file
-outdir="/data/01.broad_hg38/$sample" # The output directory
-prefix="$sample" # Prefix for output files
-bed="/data/01.broad_hg38/uk.dj.bed" # BED file for DJ counting
-```
+The mapping based approach is recommended when the reads are already aligned to one of the following references.
 
-### Calculating the bacgkround coverage 
-We calculate background coverage using autosomal chromosomes from the GRCh38 reference.
-This is achieved by analyzing aligned BAM files with tools like samtools depth or samtools idxstats.
-Ensure that your BAM files contain the necessary contigs for accurate DJ coverage calculation.
-Background coverage is computed as the median depth across autosomal chromosomes.
-```bash
-## Calculate the read length
-fragmentSize=$(samtools view $bam | head -10000 | awk '{print length($10)}' | sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
-echo $fragmentSize
+1. GRCh38/hg38 [Homo_sapiens_assembly38.fasta.gz](https://github.com/broadinstitute/gatk/tree/master/src/test/resources/large/) (1000 Genomes Project Broad ver. Suitable for UKBioBank)
 
-## Calculate the total background
-bgCov=$(for i in {1..22}; do
-  samtools coverage -r chr${i} "$bam" | sed -n 2p | awk -v frag="$fragmentSize" '{print $4/$3*frag}'
-done | sort -n | awk '{a[NR]=$1} END {print a[int(NR/2)]};')
-echo $bgCov
-```
+   Requires `chr21`, `chr17_GL000205v2_random` and `chrUn_GL000195v1`.
 
-### Calculating the coverage of DJ regions scattered across GRCh38 reference
-The provided BED file contains regions highly similar to DJ regions on CHM13 chromosome 13, excluding high variable or repeat regions.
-Coverage calculation utilizes `samtools depth`, with computational time typically under 5~8 minutes using 10 threads, depending on BAM file size.
-```bash
-# Calculate the DJ regions' coverage
-sum=$(samtools depth -@ $threads -b $bed $bam | awk 'BEGIN { SUM=0 } { SUM+=$3 } END { print SUM }')
-echo $sum
-```
+2. GRCh37/hg19 [human_g1k_v37.fasta.gz](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/) (1000 Genomes Project ver)
 
-### Calculating the number of DJ counts
-DJ counts are derived by dividing the total depth on DJ regions in GRCh38 by the background coverage.
-The total length of DJ regions used in this analysis is fixed at 136,405 bp.
-Results are presented in diploid genome bases by multiplying by 2.
-```bash
-covLen=136405
-djCount=$(echo "scale=5; 2 * $sum / $covLen / $bgCov" | bc)
-echo -e "$prefix\t$fragmentSize\t$bgCov\t$sum\t$djCount" > $outdir/$prefix.dj_hg38.txt
-```
+   Requires `chr7_gl000195_random` and `chr17_gl000205_random`.
 
-###  Expectable output
-The output file `$outdir/$prefix.dj_hg38.txt` contains two columns separated by tabs:
-1. **$prefix:** This column contains identifiers or names associated with each estimation of DJ count.
-2. **Estimation of DJ count based on diploid genome:** This column provides the calculated DJ count values adjusted for diploid genome context.
-```bash
-Sample01	8.30800
-```
+3. T2T-CHM13/hs1 (Will be updated soon)
 
-Normal human samples typically yield around 10 copies of DJ counts, with occasional deviations to ~11 or ~9.
-Robertsonian samples usually show approximately ~8 copies.
+For hg38 or hg19, check with `samtools` to confirm the sequence exists in the header; such as using `samtools view -H in.bam | grep chr17_GL000205v2_random`.
 
-<img src="https://github.com/user-attachments/assets/9212dabb-593f-4040-bebc-494a74301fa0" width="200">
+Read coverage is assessed on the mapped BAM file for the target DJ region and compared against the background coverage collected from autosomes.
 
+### K-mer based approach
 
-## Changing logs
+The k-mer based approach is reference-free.
+
+This approach is recommended when reads are aligned to hg38 or hg19 _without any decoy sequences_ or are in its raw FASTQ form. A collected set of target k-mers are pre-built to query the k-mer multiplicity of the DJ and is compared against the single / 2-copy copy number estimates inferred from the k-mer multiplicity histogram.
+
+## Change logs
 <details>
-<summary>V0.1(2024-07-17)</summary>
+<summary>v0.1(2024-07-17)</summary>
 * first commit
 </details>
 
 <details>
-<summary>V0.2(2024-07-25)</summary>
+<summary>v0.2(2024-07-25)</summary>
 * Changing the background coverage estimation methods from samtools idxstats to samtools coverage.<br />
-* Removing the step of saving temporary files; instead, we assign everything to variables.   
+* Removing the step of saving temporary files; instead, we assign everything to variables.
 </details>
 
 <details>
-<summary>V0.2.1(2024-07-29)</summary>
+<summary>v0.2.1(2024-07-29)</summary>
 * Add background and fragment size to the output file. <br />
 * Fix the command line used for calculating the background to ensure it works correctly.
 </details>
 
 <details>
-<summary>V0.2.2(2025-11-26)</summary>
+<summary>v0.2.2(2025-11-26)</summary>
 * Add BED file for roi on hg19 <br />
 </details>
 
