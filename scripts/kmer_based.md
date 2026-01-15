@@ -82,8 +82,7 @@ Collect results in one place and sort by copy number estimates.
 echo -e "Sample\tDJmedCov\tPeakCP2\tPeak_Est" > djcount_kmer.txt
 cat *_DJ_count.txt | sort -k4,4n >> djcount_kmer.txt
 ```
-Below is the result from 222 1KGP samples with available assemblies and sequenced with Illumina NovaSeq at NYGC.
-Estimates using the 2cp peak (`Peak_Est`) seems more reliable.
+Below is the result from 222 1KGP samples with available assemblies from [HPRCr2](https://github.com/human-pangenomics/hprc_intermediate_assembly/blob/main/data_tables/sample/hprc_release2_sample_metadata.csv) and sequenced with [Illumina NovaSeq at NYGC](https://www.internationalgenome.org/data-portal/data-collection/30x-grch38).
 
 <img src="1kgp_hprc_djcount_kmer.png" alt="desc" width="400" />
 
