@@ -1,7 +1,7 @@
 # K-mer based approach
 
 ## Dependencies
-* [Meryl v1.4.1](https://github.com/marbl/meryl): Recommend to use the pre-built binary release versions. Append the path to the binary `meryl` under $PATH environment variable.
+* [Meryl v1.4.1](https://github.com/marbl/meryl): Recommended to use the pre-built binary release versions. Append the path to the binary `meryl` under $PATH environment variable.
 * [Merqury](https://github.com/marbl/merqury): We are only using [kmerHistToPloidyDepth.jar](https://github.com/marbl/merqury/blob/master/eval/kmerHistToPloidyDepth.jar). Clone this repository under `$tools` and set the environment variable `MERQURY=/path/to/tools/Merqury`. Nothing needs to be installed except for a java runtime engine, which comes with most OSs.
 * Optional: [Samtools v1.21+](https://github.com/samtools/samtools) if the input file is in BAM/CRAM format
 
@@ -26,11 +26,14 @@ Number of 31-mers that are:
   missing   4611686018427335677  (non-redundant kmer sequences not in the input)
 ```
 
-## Run `kmer_based_dj_counting.sh`
+## Fast start
+Run `kmer_based_dj_counting.sh`
 ```sh
-Usage: kmer_based_dj_counting.sh <sample_name> <input.bam|input.fastq>
+./kmer_based_dj_counting.sh
+Usage: kmer_based_dj_counting.sh <sample_name> <input.bam|input.fq.gz>
   sample_name: Sample identifier
-  input.bam|input.fastq: Input sequencing reads in BAM or FASTQ format. For paired-end reads, provide "input_1.fastq input_2.fastq"
+  input.bam|input.fq.gz: Input sequencing reads in BAM or FASTQ format (gz or not).
+  For paired-end reads, provide files as a comma separated list e.g. "input1.fq.gz,input2.fq.gz"
 ```
 
 ## Collect 31-mers
@@ -44,7 +47,7 @@ meryl count k=31 threads=${cpus} memory=${mem} output ${sample}.k31.meryl ${inpu
 meryl histogram ${sample}.k31.meryl > ${sample}.k31.hist
 ```
 
-## Collect median peak for DJ
+## Collect median peak for DJ k-mers
 The `$DJ_TARGET` has been carefully chosen based on kmer profiles on CHM13. The intersection below outputs a subset of the k-mers found in the reads. The histogram is used to pick up the median frequency and its corresponding k-mer multiplicity. This matches the mostly observed k-mer counts found in the DJ.
 
 ```sh
