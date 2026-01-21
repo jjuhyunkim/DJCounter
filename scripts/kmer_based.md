@@ -30,10 +30,11 @@ Number of 31-mers that are:
 Run `kmer_based_dj_counting.sh`
 ```sh
 ./kmer_based_dj_counting.sh
-Usage: kmer_based_dj_counting.sh <sample_name> <input.bam|input.fq.gz>
+Usage: kmer_based_dj_counting.sh <sample_name> <input.bam|input.cram|input.fq.gz> [ref]
   sample_name: Sample identifier
-  input.bam|input.fq.gz: Input sequencing reads in BAM or FASTQ format (gz or not).
+  input.bam|input.cram|input.fq.gz: Input sequencing reads in BAM or FASTQ format (gz or not).
   For paired-end reads, provide files as a comma separated list e.g. "input1.fq.gz,input2.fq.gz"
+  ref: (Optional) Reference genome used in the bam/cram input file.
 ```
 
 ## Collect 31-mers
