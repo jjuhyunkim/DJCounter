@@ -17,7 +17,7 @@ Copy number of the DJ can be estimated with the following approaches:
 
 The mapping based approach is recommended when the reads are already aligned to one of the following references.
 
-1. GRCh38/hg38 [Homo_sapiens_assembly38.fasta.gz](https://github.com/broadinstitute/gatk/tree/master/src/test/resources/large/) (1000 Genomes Project Broad ver. Suitable for UKBioBank)
+1. GRCh38/hg38 [Homo_sapiens_assembly38.fasta.gz](https://github.com/broadinstitute/gatk/tree/master/src/test/resources/large/) (1000 Genomes Project Broad ver. Suitable for UKBioBank) or [GRCh38_full_analysis_set_plus_decoy_hla.fa](ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa) (1000 Genomes Project NYGC ver. Suitable for 1KGP NYGC 30x cram)
 
    Requires `chr21`, `chr17_GL000205v2_random` and `chrUn_GL000195v1`.
 
