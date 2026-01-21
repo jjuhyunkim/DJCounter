@@ -17,8 +17,7 @@ partition=quick
 walltime=4:00:00
 path=`pwd`
 local="--gres=lscratch:120"
-# array="--array=1-$NUM_LINES"
-array="--array=11-300" # Test with first 300 lines only
+array="--array=1-$NUM_LINES"
 
 mkdir -p logs
 log=logs/$name.%A_%a.log

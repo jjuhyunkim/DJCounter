@@ -7,7 +7,7 @@ DJ_TARGET=$tools/DJCounter/resources/DJtarget.meryl
 if [[ -z $sample || -z $input ]]; then
   echo "Usage: kmer_based_dj_counting.sh <sample_name> <input.bam|input.cram|input.fq.gz> [ref]"
   echo "  sample_name: Sample identifier"
-  echo "  input.bam|input.fq.gz: Input sequencing reads in BAM or FASTQ format (gz or not)."
+  echo "  input.bam|input.cram|input.fq.gz: Input sequencing reads in BAM or FASTQ format (gz or not)."
   echo "  For paired-end reads, provide files as a comma separated list e.g. \"input1.fq.gz,input2.fq.gz\""
   echo "  ref: (Optional) Reference genome used in the bam/cram input file."
   exit 1
@@ -42,7 +42,7 @@ set -x
 
 mkdir -p hist DJcounts
 
-if [[ -s hist/$sample.k31.hist ]] && [[ -d $tmp/${sample}.k31.meryl ]]; then
+if [[ -d $tmp/${sample}.k31.meryl ]]; then
   echo "Kmer database already exists for ${sample}, skipping counting."
 else
   input=$(echo $input | tr ',' ' ')
@@ -60,7 +60,7 @@ else
     elif [[ $3 == "hg38" ]]; then
       ref="--reference $tools/DJCounter/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa"
     fi
-    #mkfifo ${sample}_fq_pipe
+    # mkfifo ${sample}_fq_pipe
     # $samtools fastq -@ ${cpus} $ref $input > ${sample}_fq_pipe &
     samtools fastq -@ ${cpus} $ref $input | pigz -c - > $tmp/${sample}.fq.gz
 	  # meryl count k=31 threads=${cpus} memory=${mem} output ${sample}.k31.meryl ${sample}_fq_pipe || exit -1
@@ -91,3 +91,5 @@ peak2=`java -jar -Xmx256m $MERQURY/eval/kmerHistToPloidyDepth.jar hist/${sample}
 echo -e "${sample}\t${med}\t${peak2}" |
   awk -F "\t" '{print $1"\t"$2"\t"$3"\t"(($2*2)/$3)}' \
   > DJcounts/${sample}_DJ_count.txt
+
+cat DJcounts/${sample}_DJ_count.txt
