@@ -2,6 +2,7 @@
 
 sample=$1
 input=$2
+ref=$3
 DJ_TARGET=$tools/DJCounter/resources/DJtarget.meryl
 
 if [[ -z $sample || -z $input ]]; then
@@ -55,9 +56,9 @@ else
 	  fi
     module load samtools/1.21
     ref=""
-    if [[ -z $3 ]]; then
+    if [[ -z $ref ]] || [[ $ref == "" ]]; then
       echo "No reference provided for BAM/CRAM input. Assuming bam/cram has all the sequences."
-    elif [[ $3 == "hg38" ]]; then
+    elif [[ $ref == "hg38" ]]; then
       ref="--reference $tools/DJCounter/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa"
     fi
     # mkfifo ${sample}_fq_pipe
