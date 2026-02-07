@@ -36,8 +36,17 @@ Usage: kmer_based_dj_counting.sh <sample_name> <input.bam|input.cram|input.fq.gz
   For paired-end reads, provide files as a comma separated list e.g. "input1.fq.gz,input2.fq.gz"
   ref: (Optional) Reference genome used in the bam/cram input file.
 ```
+## Plot results
+Here is a simple script to gather results and plot the distribution.
+```sh
+cat DJcounts/*_DJ_count.txt > DJ_counts.txt
+wc -l DJ_counts.txt
+Rscript $tools/DJCounter/scripts/plot_dist.R
+```
 
-## Collect 31-mers
+## Detailed steps
+
+### Collect 31-mers
 
 This step counts all 31-mers in the sequence.
 
@@ -48,7 +57,7 @@ meryl count k=31 threads=${cpus} memory=${mem} output ${sample}.k31.meryl ${inpu
 meryl histogram ${sample}.k31.meryl > ${sample}.k31.hist
 ```
 
-## Collect median peak for DJ k-mers
+### Collect median peak for DJ k-mers
 The `$DJ_TARGET` has been carefully chosen based on kmer profiles on CHM13. The intersection below outputs a subset of the k-mers found in the reads. The histogram is used to pick up the median frequency and its corresponding k-mer multiplicity. This matches the mostly observed k-mer counts found in the DJ.
 
 ```sh
@@ -59,7 +68,7 @@ med=`cat ${sample}.DJ.hist | \
   awk -v count_mid=${count_mid} '{cnt_sum+=$NF; if (cnt_sum > count_mid) {print $(NF-1); exit;} }'`
 ```
 
-## Collect background coverage (2-copy peak)
+### Collect background coverage (2-copy peak)
 
 Background coverage is using `kmerHistToPloidyDepth.jar` from Merqury, which differentiates the histogram to find the 1- and 2-copy peaks and boundaries. In some corner cases it fails to find the 1st peak and only reports the 2nd peak as the 1st peak, which is observed in very homozygous samples. Regardless, the last line peak value corresponds to the most likely observed 2-copy peak.
 
@@ -67,7 +76,7 @@ Background coverage is using `kmerHistToPloidyDepth.jar` from Merqury, which dif
 peak2=`java -jar -Xmx256m $MERQURY/eval/kmerHistToPloidyDepth.jar ${sample}.k31.hist | tail -n1 | awk '{print $2}'`
 ```
 
-## DJ copy number estimate
+### DJ copy number estimate
 Now we are simply deviding the observed median peak of the DJ counts by the background coverage. Because we are using the 2-copy peak, we adjust the values (by `medx2`) to output the report in absolute copies.
 
 ```sh
@@ -77,17 +86,19 @@ echo -e "${sample}\t${med}\t${peak2}" |
   > ${sample}_DJ_count.txt
 ```
 
-## Gather results
+### Gather results
 Collect results in one place and sort by copy number estimates.
 ```sh
 echo -e "Sample\tDJmedCov\tPeakCP2\tPeak_Est" > djcount_kmer.txt
-cat *_DJ_count.txt | sort -k4,4n >> djcount_kmer.txt
+cat DJcounts/*_DJ_count.txt | sort -k4,4n >> djcount_kmer.txt
 ```
-Below is the result from 222 1KGP samples with available assemblies from [HPRCr2](https://github.com/human-pangenomics/hprc_intermediate_assembly/blob/main/data_tables/sample/hprc_release2_sample_metadata.csv) and sequenced with [Illumina NovaSeq at NYGC](https://www.internationalgenome.org/data-portal/data-collection/30x-grch38).
+
+## Sample result from 1KGP
+Below is a result from 222 1KGP samples with available assemblies from [HPRCr2](https://github.com/human-pangenomics/hprc_intermediate_assembly/blob/main/data_tables/sample/hprc_release2_sample_metadata.csv) and sequenced with [Illumina NovaSeq at NYGC](https://www.internationalgenome.org/data-portal/data-collection/30x-grch38).
 
 <img src="1kgp_hprc_djcount_kmer.png" alt="desc" width="400" />
 
-## Experimenting with genomescope2
+### Experimenting with genomescope2
 As an option, GenomeScope2 `kcov` can be used for collecting the background coverage. However, we found that using the actual peak value of the 2-copy region fitted better to the expected distribution.
 
 ```sh
