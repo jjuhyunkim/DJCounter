@@ -39,7 +39,7 @@ done
 args="$map"
 if [ -n "$ref" ]; then
     echo "Reference genome: $ref"
-    args="$map $ref"
+    args="$map -ref $ref"
 fi
 
 
