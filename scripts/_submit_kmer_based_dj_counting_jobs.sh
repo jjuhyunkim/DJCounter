@@ -51,7 +51,7 @@ if [ -n "$array_idx" ]; then
 fi
 
 cpus=16
-mem=120g
+mem=120g # Offsetting 10G in kmer_base_dj_counting.sh to prevent out of memory error in case of slight underestimation of memory requirement.
 name=kmer_dj_count
 script=$tools/DJCounter/scripts/_kmer_based_dj_counting_job.sh
 args="$args"

@@ -10,61 +10,79 @@ Target DJ region used in the assessment are provided in this repository for
 
 For GRCh38, the DJ sequences are on `chr21`, `chr17_GL000205v2_random` and `chrUn_GL000195v1`. Our pipeline is optimized for processing aligned BAM files to the Broad reference version of the GRCh38. You can download the reference from [Broad Github](https://github.com/broadinstitute/gatk/raw/master/src/test/resources/large/Homo_sapiens_assembly38.fasta.gz).
 
+
+## Wrapper script 
 ```bash
-# This is an example
+Usage: DJCounter/scripts/calCounts.sh --sample <sample> --ref <reference> --bam <bam_file>
+  --sample: sample name
+  --ref: reference name (hg19 or GRCh38)
+  --bam: path to BAM file
+  --noGap: exclude gap regions in calculations (False by default)
+  --filter: filter option for calculations (3332 by default)
+  --threads: number of threads to use (10 by default)
+  --targetlist: list of target regions (DJ_filt by default)
+```
+
+###  Expected output
+The output file `$outdir/$sample.$ref.tg.$filter_condition.$gap_condition.txt` contains five columns separated by tabs:
+1. **sample:** This column contains identifiers or names associated with each estimation of DJ count.
+2. **ref:** reference name
+3. **roi:** region of interest.
+4. **background coverage:** background coverage calculated from autosome
+5. **Estimation of DJ count based on diploid genome:** This column provides the calculated DJ count values adjusted for diploid genome context.
+```bash
+Sample01    GRCh38  DJ_filt 33.9158 11.01608
+```
+
+## Details
+```bash
+# This is an input example
 sample=Sample01
 threads=10
 
 bam="/data/01.broad_hg38/$sample/$sample.dedup.bam" # BAM or CRAM file
 outdir="/data/01.broad_hg38/$sample" # The output directory
 prefix="$sample" # Prefix for output files
-bed="/data/01.broad_hg38/uk.dj.bed" # BED file for DJ counting
+bed="/roi/DJ_filt.bed" # BED file for DJ counting
 ```
 
 ## Bacgkround coverage
-We calculate background coverage using autosomal chromosomes from the reference.
-This is achieved by analyzing aligned BAM files with `samtools coverage` and `samtools depth`.
-Ensure that your BAM files contain the necessary contigs for accurate DJ coverage calculation.
-Background coverage is computed as the median depth across autosomal chromosomes.
+We calculate background coverage using autosomal chromosomes from the reference genome. This is achieved by analyzing aligned BAM files with `samtools idxstat` or `samtools view`, applying any user-specified filtering conditions, multiplying by the fragment size, and dividing by the corresponding chromosome length.
 
-```bash
-## Get the read length from the first 10k reads
-fragmentSize=$(samtools view $bam | head -10000 | awk '{print length($10)}' | sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}')
-echo $fragmentSize
+Ensure that your BAM files contain all contigs listed in `DJ_filt.bed` to enable accurate DJ coverage calculation. This checking step is also included in the script. Background coverage is computed as the median depth across autosomal chromosomes to minimize the impact of potential aneuploidy in individual chromosomes.
 
-## Calculate the total background
-bgCov=$(for i in {1..22}; do
-  samtools coverage -r chr${i} "$bam" | sed -n 2p | awk -v frag="$fragmentSize" '{print $4/$3*frag}'
-done | sort -n | awk '{a[NR]=$1} END {print a[int(NR/2)]};')
-echo $bgCov
-```
+$$
+\text{Background Coverage}
+=
+\operatorname{median}_{c \in \text{autosomes}}
+\left(
+\frac{N_c \times L_{\text{fragment}}}{L_c}
+\right)
+$$
 
-## Target DJ coverage
-The provided BED file contains regions highly similar to DJ regions on CHM13 chromosome 13, excluding high variable or repeat regions.
-Coverage calculation utilizes `samtools depth`, with computational time typically under 5~8 minutes using 10 threads, depending on BAM file size.
-```bash
-# Calculate the DJ regions' coverage
-sum=$(samtools depth -@ $threads -b $bed $bam | awk 'BEGIN { SUM=0 } { SUM+=$3 } END { print SUM }')
-echo $sum
-```
+where :
+- **Nc** : Number of reads mapped to the chromosome
+- **Lfragment** : length of fragments
+- **Lc** : length of the chromosome
 
-### Copy number estimate of the DJ
-DJ counts are derived by dividing the total depth on DJ regions in GRCh38 by the background coverage.
-The total length of DJ regions used in this analysis is fixed at 136,405 bp.
-Results are presented in diploid genome bases by multiplying by 2.
-```bash
-covLen=136405
-djCount=$(echo "scale=5; 2 * $sum / $covLen / $bgCov" | bc)
-echo -e "$prefix\t$fragmentSize\t$bgCov\t$sum\t$djCount" > $outdir/$prefix.dj_hg38.txt
-```
 
-###  Expected output
-The output file `$outdir/$prefix.dj_hg38.txt` contains two columns separated by tabs:
-1. **$prefix:** This column contains identifiers or names associated with each estimation of DJ count.
-2. **Estimation of DJ count based on diploid genome:** This column provides the calculated DJ count values adjusted for diploid genome context.
-```bash
-Sample01	8.30800
-```
+## Calculating the diploid DJ counts
+We calculated the DJ counts for a diploid genome using the equation below.
+
+$$
+\text{norm\_count}
+=
+\frac{2 \times \text{tgCount} \times \text{fragmentSize}}
+{\text{covLen} \times \text{bgCov}}
+$$
+
+Where:  
+- **tgCount**: the number of reads aligned to the target region  
+- **covLen**: the original length of DJ on CHM13 used to normalize tgCount  
+- **bgCov**: background autosomal coverage used for normalization  
+- **fragmentSize**: average fragment size of the sequencing library
+
+## Expected results
 
 Normal human samples typically yield around 10 copies of DJ counts, with occasional deviations to ~11 or ~9.
 Robertsonian samples usually show approximately ~8 copies.

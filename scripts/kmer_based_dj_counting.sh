@@ -23,7 +23,7 @@ if [[ -z $SLURM_MEM_PER_NODE ]]; then
   mem=48
 else
   # Convert MB to GB
-  mem=$((SLURM_MEM_PER_NODE/1024))
+  mem=$(((SLURM_MEM_PER_NODE/1024)-10))
 fi
 
 if [[ -z $SLURM_JOB_ID ]]; then
