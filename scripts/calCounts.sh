@@ -8,8 +8,9 @@ set -e
 sample=""
 refname=""
 bam=""
+fasta=true
 noGap=false
-filter=""
+accurate=false
 targetlist="DJ_filt"
 filter_flag="3332"
 threads=10
@@ -32,9 +33,9 @@ while [[ $# -gt 0 ]]; do
             noGap=true
             shift 1
             ;;
-        --filter)
-            filter_flag="$2"
-            shift 2
+        --accurate)
+            accurate=true
+            shift 1
             ;;
         --threads)
             threads="$2"
@@ -57,10 +58,10 @@ if [ -z "$sample" ] || [ -z "$refname" ] || [ -z "$bam" ]; then
     echo "  --sample: sample name"
     echo "  --ref: reference name (hg19 or GRCh38)"
     echo "  --bam: path to BAM file"
-    echo "  --noGap: exclude gap regions in calculations (False by default)"
-    echo "  --filter: filter option for calculations (3332 by default)"
+    # echo "  --noGap: exclude gap regions in calculations (False by default)"
+    # echo "  --filter: filter option for calculations (3332 by default)"
     echo "  --threads: number of threads to use (10 by default)"
-    echo "  --targetlist: list of target regions (DJ_filt by default)"
+    # echo "  --targetlist: list of target regions (DJ_filt by default)"
     exit 1
 fi
 prefix=${sample}.${refname}
@@ -139,9 +140,9 @@ for target in $targetlist; do
 done
 
 # FRAGEMENT SIZE
-fragmentSize=$(samtools view "$bam" | head -10000 | awk '{print length($10)}' | sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
+# fragmentSize=$(samtools view "$bam" | head -10000 | awk '{print length($10)}' | sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
 # echo $fragmentSize > fragmentsize.txt
-echo "fragment size : $fragmentSize"
+# echo "fragment size : $fragmentSize"
 
 if [ ! -f ${bam}.bai ]; then
 	samtools index -@ $threads $bam
@@ -156,23 +157,23 @@ if [ "$filter_flag" == "" ] && [ ! -f "${prefix}.noFilter.${gap_info}.readCount.
     samtools idxstats -@ $threads $bam > ${prefix}.noFilter.idxstats
     cut -f 1,3 ${prefix}.noFilter.idxstats > ${prefix}.noFilter.${gap_info}.readCount.txt
 
-elif [ "$filter_flag" != "" ]; then 
-    
-    if [ ! -f "${prefix}.$filter_info.$gap_info.readCount.txt" ]; then
-    echo "calculating background coverage"
-
-    for chr in {1..22}; do
-        echo "Processing chromosome $chr"
-        # BED 한 줄을 임시 파일로 저장
-        sed -n "${chr}p" "$autosomeBed" > tmp.bed
-
-        # read count 계산
-        readCount=$(samtools view -@ 10 -F ${filter_flag} -c -L tmp.bed "$bam")
-
-        echo -e "chr${chr}\t$readCount" >> "${prefix}.$filter_info.$gap_info.readCount.txt"
-    done
-    rm tmp.bed
-fi
+elif [ "$filter_flag" != "" ] && [ ! -f "${prefix}.$filter_info.$gap_info.readCount.txt" ]; then
+    if [ $accurate == false ]; then
+        echo -e "Calculating background read count without per-chromosome processing"
+        autosomeReadCount=$(samtools view -@ ${threads} -F ${filter_flag} -c -L "$autosomeBed" $bam)
+        bgCov=$(echo "scale=5; $autosomeReadCount / 2875001522" | bc)
+    else
+        echo -e "Calculating background read count with per-chromosome processing"
+        echo -e "This might take longer time but will be more accurate, especially for samples with uneven coverage across chromosomes."
+        for chr in {1..22}; do
+            echo "Processing chromosome $chr"
+            sed -n "${chr}p" "$autosomeBed" > tmp.bed
+            readCount=$(samtools view -@ ${threads} -F ${filter_flag} -c -L tmp.bed "$bam")
+            echo -e "chr${chr}\t$readCount" >> "${prefix}.$filter_info.$gap_info.readCount.txt"
+        done
+        rm tmp.bed
+        bgCov=$(join -t $'\t' -1 1 -2 1  "${prefix}.$filter_info.$gap_info.readCount.txt" "$backgroundLen" | awk '{print $2/$3}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
+    fi
 fi
 
 
@@ -180,7 +181,7 @@ fi
 #echo -e "$readCount" > autosome.readCount.txt
 #echo "scale=6; $fragmentSize * $readCount / 2745187818" | bc >> background.allAutosome_noDup.txt        
 
-bgCov=$(join -t $'\t' -1 1 -2 1  "${prefix}.$filter_info.$gap_info.readCount.txt" "$backgroundLen" | awk -v frag=$fragmentSize '{print frag*$2/$3}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
+
 # bgCov=$(join -t $'\t' -1 1 -2 1  "${prefix}.$filter_info.$gap_info.readCount.txt" "$backgroundLen" | awk '{print $2/$3}'| sort -n | awk '{a[i++]=$1} END {print a[int(i/2)];}') 
 # echo $bgCov > background.$filter_info.$gap_info.txt
 echo "Background coverage (bgCov): $bgCov"
@@ -189,7 +190,6 @@ rm -rf "${prefix}.tg.$filter_info.$gap_info.txt"
 
 echo -e "Reading background coverage: background.$filter_info.$gap_info.txt"
 # bgCov=$(cat background.$filter_info.$gap_info.txt)
-
 
 # targetlist=$(ls "${targetDir}"/*.bed 2>/dev/null | xargs -n 1 basename | sed -e 's/\.bed$//' | tr '\n' ' ')
 for target in $targetlist; do
@@ -243,8 +243,8 @@ for target in $targetlist; do
         covLen=$(cat "$len")
         # norm_depth=$(echo "scale=5; 2 * $tgCount_depth / $covLen / $bgCov" | bc)
         # norm_count=$(echo "scale=5; 2 * $tgCount_count * $fragmentSize / $covLen / $bgCov" | bc)
-        norm_count=$(echo "scale=5; 2 * $tgCount_count * $fragmentSize / $covLen / $bgCov" | bc)
+        norm_count=$(echo "scale=5; 2 * $tgCount_count / $covLen / $bgCov" | bc)
     fi
     # echo -e "$prefix\t${target}\t${norm_depth}\t${norm_count}" >> "$prefix.tg.$filter_info.$gap_info.txt"
-    echo -e "$sample\t$refname\t${target}\t${bgCov}\t${norm_count}" >> "$prefix.tg.$filter_info.$gap_info.txt"
+    echo -e "$sample\t$refname\t${target}\t${norm_count}" >> "$prefix.tg.$filter_info.$gap_info.txt"
 done
