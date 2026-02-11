@@ -13,14 +13,23 @@ For GRCh38, the DJ sequences are on `chr21`, `chr17_GL000205v2_random` and `chrU
 
 ## Wrapper script 
 ```bash
-Usage: DJCounter/scripts/calCounts.sh --sample <sample> --ref <reference> --bam <bam_file>
+#############################################################################
+.DDD..   .JJJ.    .CCCC.   .OOOO.   .U...U.  .N...N.  .TTTTT. .EEEEE.  .RRRR.
+.D...D     .J.   .C....   .O....O.  .U...U.  .NN..N.   ..T..  .E.....  .R...R
+.D...D     .J.   .C....   .O....O.  .U...U.  .N.N.N.   ..T..  .EEE...  .RRRR.
+.D...D  .J..J.   .C....   .O....O.  .U...U.  .N..NN.   ..T..  .E.....  .R..R.
+.DDD..   .JJ..    .CCCC.   .OOOO.   ..UUU..  .N...N.   ..T..  .EEEEE.  .R...R
+#############################################################################
+
+Usage: calCounts.sh --sample <sample> --bam <bam_file> --ref <reference> 
   --sample: sample name
-  --ref: reference name (hg19 or GRCh38)
   --bam: path to BAM file
+  --ref: reference name (GRCh38 by default)
   --noGap: exclude gap regions in calculations (False by default)
-  --filter: filter option for calculations (3332 by default)
+  --filter: filter flag option for calculations (3332 by default, excluding UNMAP,SECONDARY,DUP,SUPPLEMENTARY)
   --threads: number of threads to use (10 by default)
-  --targetlist: list of target regions (DJ_filt by default)
+  --accurate: use accurate background calculation (False by default, take more time but more accurate, especially for samples with uneven coverage across chromosomes)
+  --fast: use fast mode (False by default, using all reads without filtering, which might be faster but less accurate)
 ```
 
 ###  Expected output
@@ -28,22 +37,9 @@ The output file `$outdir/$sample.$ref.tg.$filter_condition.$gap_condition.txt` c
 1. **sample:** This column contains identifiers or names associated with each estimation of DJ count.
 2. **ref:** reference name
 3. **roi:** region of interest.
-4. **background coverage:** background coverage calculated from autosome
-5. **Estimation of DJ count based on diploid genome:** This column provides the calculated DJ count values adjusted for diploid genome context.
+4. **Estimation of DJ count based on diploid genome:** This column provides the calculated DJ count values adjusted for diploid genome context.
 ```bash
-Sample01    GRCh38  DJ_filt 33.9158 11.01608
-```
-
-## Details
-```bash
-# This is an input example
-sample=Sample01
-threads=10
-
-bam="/data/01.broad_hg38/$sample/$sample.dedup.bam" # BAM or CRAM file
-outdir="/data/01.broad_hg38/$sample" # The output directory
-prefix="$sample" # Prefix for output files
-bed="/roi/DJ_filt.bed" # BED file for DJ counting
+Sample01    GRCh38  DJ_filt 11.01608
 ```
 
 ## Bacgkround coverage
@@ -64,7 +60,6 @@ where :
 - **Nc** : Number of reads mapped to the chromosome
 - **Lfragment** : length of fragments
 - **Lc** : length of the chromosome
-
 
 ## Calculating the diploid DJ counts
 We calculated the DJ counts for a diploid genome using the equation below.
