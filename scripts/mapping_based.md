@@ -8,7 +8,7 @@ Target DJ region used in the assessment are provided in this repository for
  [GRCh38/hg38](https://github.com/jjuhyunkim/DJCounter/blob/main/roi/GRCh38/ukb-dj.bed) or
  [GRCh37/hg19](https://github.com/jjuhyunkim/DJCounter/blob/main/roi/hg19/DJ.bed).
 
-For GRCh38, the DJ sequences are on `chr21`, `chr17_GL000205v2_random` and `chrUn_GL000195v1`. Our pipeline is optimized for processing aligned BAM files to the Broad reference version of the GRCh38. You can download the reference from [Broad Github](https://github.com/broadinstitute/gatk/raw/master/src/test/resources/large/Homo_sapiens_assembly38.fasta.gz).
+For GRCh38, the DJ sequences are on `chr21`, `chrUn_GL000220v1`, `chr17_GL000205v2_random`, `chr22_KI270733v1_random` and `chrUn_GL000195v1`. Our pipeline is optimized for processing aligned BAM files to the Broad reference version of the GRCh38. You can download the reference from [Broad Github](https://github.com/broadinstitute/gatk/raw/master/src/test/resources/large/Homo_sapiens_assembly38.fasta.gz).
 
 
 ## Wrapper script 
