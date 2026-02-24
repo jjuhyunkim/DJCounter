@@ -51,12 +51,13 @@ Ensure that your BAM files contain all contigs listed in `DJ_filt.bed` to enable
 ```
 Background Coverage = median over autosomes of:
 
-(N_c × L_fragment) / L_c
+N_c / L_c
 
 where :
-- **Nc** : Number of reads mapped to the chromosome
-- **Lc** : length of the chromosome
+- N_c : Number of reads mapped to the chromosome
+- L_c : length of the chromosome
 ```
+This value does not represent the actual sequencing coverage. To obtain the true coverage, multiply it by the fragment size. The fragment size is omitted from this equation because it is also multiplied when calculating the target coverage, and therefore cancels out.
 
 ## Calculating the diploid DJ counts
 We calculated the DJ counts for a diploid genome using the equation below.
