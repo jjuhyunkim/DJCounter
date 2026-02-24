@@ -38,6 +38,7 @@ The output file `$outdir/$sample.$ref.tg.$filter_condition.$gap_condition.txt` c
 2. **ref:** reference name
 3. **roi:** region of interest.
 4. **Estimation of DJ count based on diploid genome:** This column provides the calculated DJ count values adjusted for diploid genome context.
+
 ```bash
 Sample01    GRCh38  DJ_filt 11.01608
 ```
@@ -47,35 +48,27 @@ We calculate background coverage using autosomal chromosomes from the reference 
 
 Ensure that your BAM files contain all contigs listed in `DJ_filt.bed` to enable accurate DJ coverage calculation. This checking step is also included in the script. Background coverage is computed as the median depth across autosomal chromosomes to minimize the impact of potential aneuploidy in individual chromosomes.
 
-$$
-\text{Background Coverage}
-=
-\operatorname{median}_{c \in \text{autosomes}}
-\left(
-\frac{N_c \times L_{\text{fragment}}}{L_c}
-\right)
-$$
+```
+Background Coverage = median over autosomes of:
+
+(N_c × L_fragment) / L_c
 
 where :
 - **Nc** : Number of reads mapped to the chromosome
-- **Lfragment** : length of fragments
 - **Lc** : length of the chromosome
+```
 
 ## Calculating the diploid DJ counts
 We calculated the DJ counts for a diploid genome using the equation below.
 
-$$
-\text{norm\_count}
-=
-\frac{2 \times \text{tgCount} \times \text{fragmentSize}}
-{\text{covLen} \times \text{bgCov}}
-$$
+```
+norm_count = (2 × tgCount ) / (covLen × bgCov)
 
 Where:  
-- **tgCount**: the number of reads aligned to the target region  
-- **covLen**: the original length of DJ on CHM13 used to normalize tgCount  
-- **bgCov**: background autosomal coverage used for normalization  
-- **fragmentSize**: average fragment size of the sequencing library
+- tgCount: the number of reads aligned to the target region  
+- covLen: the original length of DJ on CHM13 used to normalize tgCount  
+- bgCov: background autosomal coverage used for normalization  
+```
 
 ## Expected results
 
