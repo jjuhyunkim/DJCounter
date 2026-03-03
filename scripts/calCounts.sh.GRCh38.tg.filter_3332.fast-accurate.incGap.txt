@@ -1,0 +1,1 @@
+/vf/users/Phillippy/tools/DJCounter/scripts/calCounts.sh	GRCh38	DJ_filt	10.43491

@@ -78,3 +78,24 @@ Robertsonian samples usually show approximately ~8 copies.
 
 <img src="https://github.com/user-attachments/assets/9212dabb-593f-4040-bebc-494a74301fa0" width="200">
 
+## Transform and Predict the Copy Number Group Using the GMM Distribution
+
+If you have only a few samples and cannot generate your own distribution to identify ROB samples, we provide a pre-fitted Gaussian Mixture Model (GMM) distribution based on 1KGP (n = 3,202) samples.
+This distribution accurately represents the density of each peak.
+
+### Input
+The only required input for this script is the DJ count for your sample:
+```
+python predict_DJ_cn.py --dj_count 8
+```
+
+### Output
+
+The script will generate PDF files to visualize where your sample falls within the distribution:
+* `dj.distribution.pdf`
+
+<img src="dj.distribution.png" width="400">
+
+* `dj.distribution.zoomin.pdf`
+  
+<img src="dj.distribution.zoomin.png" width="400">
