@@ -48,16 +48,16 @@ mamba install -c bioconda -c conda-forge djcounter
 
 ```bash
 # Docker
-docker run --rm -v "$PWD":/data quay.io/biocontainers/djcounter:1.1--<build> \
+docker run --rm -v "$PWD":/data quay.io/biocontainers/djcounter:1.1--hdfd78af_0 \
     djcounter-kmer -sample Sample01 -input /data/reads.fq.gz
 
 # Singularity / Apptainer
 singularity exec \
-    https://depot.galaxyproject.org/singularity/djcounter:1.1--<build> \
+    https://depot.galaxyproject.org/singularity/djcounter:1.1--hdfd78af_0 \
     djcounter-kmer -sample Sample01 -input reads.fq.gz
 ```
 
-Replace `<build>` with the tag shown on [quay.io/biocontainers/djcounter](https://quay.io/repository/biocontainers/djcounter?tab=tags).
+* Replace `<build>` with the tag shown on [quay.io/biocontainers/djcounter](https://quay.io/repository/biocontainers/djcounter?tab=tags).
 
 ### Manual install
 
